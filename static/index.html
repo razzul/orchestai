@@ -1072,6 +1072,44 @@
                 transform: translateY(-5px)
             }
         }
+
+        /* Suggestions */
+        .suggestions-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .suggestions-container::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .suggestions-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .suggestion-chip {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text2);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .suggestion-chip:hover {
+            background: var(--accent-light);
+            border-color: var(--accent-mid);
+            color: var(--accent);
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 
@@ -1117,6 +1155,13 @@
             </div>
 
             <div class="chat-input-area">
+                <div class="suggestions-container">
+                    <div class="suggestion-chip" onclick="useSuggestion('Create a high-priority task to draft the Q3 financial report by this Friday afternoon')">📝 Draft Q3 Report by Friday</div>
+                    <div class="suggestion-chip" onclick="useSuggestion('Find a 30-minute slot for a project sync with the team next Tuesday morning')">📅 Project Sync next Tuesday</div>
+                    <div class="suggestion-chip" onclick="useSuggestion('Email the team a summary of our current overdue tasks and ask for status updates')">📧 Email Team Task Update</div>
+                    <div class="suggestion-chip" onclick="useSuggestion('Check my schedule for Wednesday and see if I have time for a deep-work block')">🔍 Check Wednesday Schedule</div>
+                    <div class="suggestion-chip" onclick="useSuggestion('Add a reminder to follow up with the vendor about the contract review on Monday')">🔔 Vendor Follow-up Monday</div>
+                </div>
                 <div class="chat-input-row">
                     <textarea class="chat-input" id="chat-input" placeholder="Ask OrchestAI anything…" rows="1"
                         onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
@@ -1450,6 +1495,13 @@
             log.appendChild(div);
             log.scrollTop = log.scrollHeight;
             toolCallCount++;
+        }
+
+        function useSuggestion(text) {
+            const input = document.getElementById('chat-input');
+            input.value = text;
+            input.focus();
+            autoResize(input);
         }
 
         async function sendMessage() {
