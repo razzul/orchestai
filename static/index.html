@@ -1172,7 +1172,7 @@
             transform: translateY(-1px);
         }
     </style>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://accounts.google.com/gsi/client" onload="window.gsiLoaded = true; if(window.domLoaded) initAuth();" async defer></script>
 </head>
 
 <body>
@@ -1377,7 +1377,9 @@
         let startTime = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            initAuth();
+            window.domLoaded = true;
+            if (window.gsiLoaded) initAuth();
+            
             if (userId) {
                 hideLogin();
                 showPage('chat');
@@ -1388,18 +1390,32 @@
             }
         });
 
+        let isAuthInitialized = false;
         function initAuth() {
+            if (isAuthInitialized) return;
+            console.log("Initializing Auth...");
+            
             const clientId = 'your-google-client-id.apps.googleusercontent.com'; // Should match .env
             
-            google.accounts.id.initialize({
-                client_id: clientId,
-                callback: handleCredentialResponse
-            });
-            
-            google.accounts.id.renderButton(
-                document.getElementById("google-signin-btn"),
-                { theme: "outline", size: "large", width: 320 }
-            );
+            try {
+                google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: handleCredentialResponse
+                });
+                
+                const btnContainer = document.getElementById("google-signin-btn");
+                if (btnContainer) {
+                    google.accounts.id.renderButton(
+                        btnContainer,
+                        { theme: "outline", size: "large", width: 320 }
+                    );
+                    isAuthInitialized = true;
+                } else {
+                    console.error("Button container not found");
+                }
+            } catch (err) {
+                console.error("Error initializing Google Auth:", err);
+            }
         }
 
         async function handleCredentialResponse(response) {
