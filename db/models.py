@@ -24,6 +24,7 @@ class UserSession(Base):
 
     session_id = Column(String, primary_key=True)
     user_id = Column(String, nullable=False)
+    title = Column(String, nullable=True)
     history = Column(JSON, default=list)
     created_at = Column(DateTime, default=datetime.utcnow)
 

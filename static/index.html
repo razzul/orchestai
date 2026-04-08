@@ -868,53 +868,15 @@
 
         <!-- Chat main -->
         <div class="chat-main">
-            <div class="chat-header">
+            <div class="chat-header" style="justify-content: flex-start; gap: 12px;">
                 <div class="status-dot"></div>
-                <span class="chat-title" id="chat-title">Project kickoff planning</span>
+                <input type="text" class="chat-title" id="chat-title" value="New Chat" 
+                    style="border: none; background: transparent; font-size: inherit; font-weight: inherit; outline: none; flex: 1;"
+                    onblur="updateTitle(this.value)" onkeydown="if(event.key==='Enter') this.blur()">
             </div>
 
             <div class="chat-messages" id="chat-messages">
-                <!-- Pre-populated messages -->
-                <div class="msg user">
-                    <div class="msg-avatar">U</div>
-                    <div class="msg-bubble">Create a task for the budget review, schedule 90 min on Thursday, and email
-                        Sarah the agenda.</div>
-                </div>
-                <div class="msg ai">
-                    <div class="msg-avatar">AI</div>
-                    <div>
-                        <div class="msg-bubble">
-                            All done! Here's what I executed:
-                            <div class="msg-tags">
-                                <span class="tag green">Task created</span>
-                                <span class="tag yellow">Thu 2–3:30pm blocked</span>
-                                <span class="tag red">Email sent to Sarah</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="msg user">
-                    <div class="msg-avatar">U</div>
-                    <div class="msg-bubble">What are my high-priority tasks due this week?</div>
-                </div>
-                <div class="msg ai">
-                    <div class="msg-avatar">AI</div>
-                    <div>
-                        <div class="msg-bubble">
-                            You have 3 high-priority tasks:<br>
-                            1. Budget Review — Thu Jul 31<br>
-                            2. Q3 Report Draft — Mon Jul 28<br>
-                            3. Vendor Contract Review — Wed Jul 30
-                            <div class="msg-tags">
-                                <span class="tag blue" style="--tag-before:'🗄'">AlloyDB query</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="msg user">
-                    <div class="msg-avatar">U</div>
-                    <div class="msg-bubble">Reschedule the meeting I just booked to Friday instead.</div>
-                </div>
+                <!-- Loaded via JS -->
             </div>
 
             <div class="chat-input-area">
@@ -930,31 +892,7 @@
         <div class="agent-panel">
             <div class="agent-panel-header">Agent Activity</div>
             <div class="agent-log" id="agent-log">
-                <div class="agent-entry">
-                    <div class="agent-name">Orchestrator</div>
-                    <div class="agent-detail">Intent: create_task + create_event + send_email</div>
-                    <span class="status-badge routed">routed</span>
-                </div>
-                <div class="agent-entry">
-                    <div class="agent-name">TaskAgent</div>
-                    <div class="agent-detail">INSERT tasks (Budget Review, High)</div>
-                    <span class="status-badge ok">200 OK</span>
-                </div>
-                <div class="agent-entry">
-                    <div class="agent-name">CalendarAgent</div>
-                    <div class="agent-detail">MCP gcal.create_event Thu 14:00</div>
-                    <span class="status-badge ok">200 OK</span>
-                </div>
-                <div class="agent-entry">
-                    <div class="agent-name">CommAgent</div>
-                    <div class="agent-detail">MCP gmail.send to sarah@co.com</div>
-                    <span class="status-badge ok">200 OK</span>
-                </div>
-                <div class="agent-entry">
-                    <div class="agent-name">CalendarAgent</div>
-                    <div class="agent-detail">MCP gcal.update_event → Fri 14:00</div>
-                    <span class="status-badge ok">200 OK</span>
-                </div>
+                <!-- Loaded via JS -->
             </div>
             <div class="agent-footer" id="agent-footer">1,842ms · 5 tool calls</div>
         </div>
@@ -1088,7 +1026,7 @@
                 sessions.forEach(s => {
                     const div = document.createElement('div');
                     div.className = 'session-item' + (s.session_id === sessionId ? ' active' : '');
-                    div.textContent = s.session_id.startsWith('sess_') ? 'Session ' + s.session_id.split('_')[1].substring(5) : s.session_id;
+                    div.textContent = s.title;
                     div.onclick = () => switchSession(s.session_id);
                     sidebar.insertBefore(div, sidebar.querySelector('.new-chat-btn'));
                 });
@@ -1098,16 +1036,50 @@
         async function switchSession(sid) {
             sessionId = sid;
             document.getElementById('chat-messages').innerHTML = '';
-            document.getElementById('chat-title').textContent = 'Session: ' + sid;
-            loadSessions(); // To update active state
+            document.getElementById('agent-log').innerHTML = ''; // Clear logs to load new ones
             
             try {
                 const res = await fetch(`${API_BASE}/sessions/${sid}`);
                 const data = await res.json();
+                document.getElementById('chat-title').value = data.title || "New Chat";
                 (data.history || []).forEach(msg => {
                     appendMessage(msg.role === 'user' ? 'user' : 'ai', msg.content);
                 });
+                loadSessions();
+                loadSessionLogs(sid); // Load associated logs
             } catch (e) { console.error("Error loading session history", e); }
+        }
+
+        async function loadSessionLogs(sid) {
+            try {
+                const res = await fetch(`${API_BASE}/logs?session_id=${sid}`);
+                const logs = await res.json();
+                const logContainer = document.getElementById('agent-log');
+                logContainer.innerHTML = '';
+                logs.reverse().forEach(log => {
+                    const div = document.createElement('div');
+                    div.className = 'agent-entry';
+                    div.innerHTML = `
+                        <div class="agent-name">${log.agent}</div>
+                        <div class="agent-detail">${log.action}</div>
+                        <span class="status-badge ok">${log.status}</span>
+                    `;
+                    logContainer.appendChild(div);
+                });
+                logContainer.scrollTop = logContainer.scrollHeight;
+            } catch (e) { console.error("Error loading session logs", e); }
+        }
+
+        async function updateTitle(newTitle) {
+            if (!newTitle) return;
+            try {
+                const res = await fetch(`${API_BASE}/sessions/${sessionId}/title`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle })
+                });
+                if (res.ok) loadSessions();
+            } catch (e) { console.error("Error updating title", e); }
         }
 
         function newChat() {
@@ -1115,7 +1087,7 @@
             document.getElementById('chat-messages').innerHTML = '';
             document.getElementById('agent-log').innerHTML = '';
             document.getElementById('agent-footer').textContent = 'Ready';
-            document.getElementById('chat-title').textContent = 'New conversation';
+            document.getElementById('chat-title').value = 'New Chat';
             loadSessions();
         }
 
@@ -1190,7 +1162,6 @@
             appendMessage('user', text);
             showTyping();
             startTime = Date.now();
-            document.getElementById('agent-log').innerHTML = '';
             toolCallCount = 0;
 
             try {
@@ -1202,6 +1173,10 @@
 
                 const data = await res.json();
                 removeTyping();
+
+                if (data.title) {
+                    document.getElementById('chat-title').value = data.title;
+                }
 
                 const tagColorMap = { TaskAgent: 'green', CalendarAgent: 'yellow', CommsAgent: 'red' };
                 const tags = (data.actions_taken || []).map(a => ({
@@ -1218,7 +1193,7 @@
                 const elapsed = Date.now() - startTime;
                 document.getElementById('agent-footer').textContent = `${elapsed}ms · ${toolCallCount} tool calls`;
                 
-                loadSessions(); // New session will appear
+                loadSessions(); 
             } catch (err) {
                 removeTyping();
                 appendMessage('ai', '⚠️ Error connecting to backend.');

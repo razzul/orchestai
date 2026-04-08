@@ -16,10 +16,11 @@ async def get_or_create_session(session_id: str, user_id: str):
         result = await db.execute(select(UserSession).where(UserSession.session_id == session_id))
         session = result.scalar_one_or_none()
         if not session:
-            session = UserSession(session_id=session_id, user_id=user_id, history=[])
+            session = UserSession(session_id=session_id, user_id=user_id, history=[], title="New Chat")
             db.add(session)
             await db.commit()
-        return session.history
+            return [], "New Chat"
+        return session.history, session.title
 
 
 async def save_session(session_id: str, history: list):
@@ -28,6 +29,14 @@ async def save_session(session_id: str, history: list):
         session = result.scalar_one_or_none()
         if session:
             session.history = history
+            await db.commit()
+
+async def update_session_title(session_id: str, title: str):
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(UserSession).where(UserSession.session_id == session_id))
+        session = result.scalar_one_or_none()
+        if session:
+            session.title = title
             await db.commit()
 
 async def save_execution_logs(session_id: str, actions: list):
@@ -44,7 +53,8 @@ async def save_execution_logs(session_id: str, actions: list):
 
 
 async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
-    history = await get_or_create_session(session_id, user_id)
+    history, title = await get_or_create_session(session_id, user_id)
+    new_title = title
 
     # Step 1: Decide which agents are needed
     model = genai.GenerativeModel("gemini-2.5-flash")
@@ -90,6 +100,13 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     """
     final_response = model.generate_content(synthesis_prompt)
 
+    # Generate title if it's a "New Chat"
+    if title == "New Chat":
+        title_prompt = f"Generate a very short (max 5 words) descriptive title for this conversation based on this first message: '{message}'. Respond ONLY with the title string."
+        title_res = model.generate_content(title_prompt)
+        new_title = title_res.text.strip()
+        await update_session_title(session_id, new_title)
+
     # Save to session history
     history.append({"role": "user", "content": message})
     history.append({"role": "assistant", "content": final_response.text})
@@ -98,5 +115,6 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
 
     return {
         "response": final_response.text,
-        "actions_taken": actions_taken
+        "actions_taken": actions_taken,
+        "title": new_title
     }

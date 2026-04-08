@@ -79,7 +79,7 @@ async def get_sessions(user_id: str):
     async with AsyncSessionLocal() as db:
         result = await db.execute(select(UserSession).where(UserSession.user_id == user_id).order_by(UserSession.created_at.desc()))
         sessions = result.scalars().all()
-        return [{"session_id": s.session_id, "created_at": str(s.created_at)} for s in sessions]
+        return [{"session_id": s.session_id, "title": s.title or "New Chat", "created_at": str(s.created_at)} for s in sessions]
 
 @app.get("/sessions/{session_id}")
 async def get_session_history(session_id: str):
@@ -89,7 +89,22 @@ async def get_session_history(session_id: str):
         session = result.scalar_one_or_none()
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
-        return {"history": session.history, "created_at": str(session.created_at)}
+        return {"history": session.history, "title": session.title or "New Chat", "created_at": str(session.created_at)}
+
+class TitleUpdateRequest(BaseModel):
+    title: str
+
+@app.put("/sessions/{session_id}/title")
+async def update_session_title_endpoint(session_id: str, req: TitleUpdateRequest):
+    from db.models import UserSession
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(UserSession).where(UserSession.session_id == session_id))
+        session = result.scalar_one_or_none()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        session.title = req.title
+        await db.commit()
+        return {"status": "ok", "title": session.title}
 
 @app.get("/logs")
 async def get_logs(session_id: str = None):
