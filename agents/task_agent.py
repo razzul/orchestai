@@ -46,7 +46,7 @@ async def update_task_status(task_id: str, status: str) -> dict:
 
 async def run_task_agent(user_id: str, instruction: str, history: list = None) -> dict:
     """Uses Gemini to decide which task operation to perform."""
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-3-flash-preview")
     
     context = ""
     if history:

@@ -7,7 +7,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 async def run_calendar_agent(instruction: str, history: list = None) -> dict:
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-3-flash-preview")
     
     context = ""
     if history:
