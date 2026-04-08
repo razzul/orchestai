@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OrchestAI</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #f7f8f6;
+            --surface: #ffffff;
+            --surface2: #f0f2ef;
+            --border: #e4e7e1;
+            --border2: #d1d6cc;
+            --text: #1a1f18;
+            --text2: #5a6357;
+            --text3: #8a9287;
+            --accent: #2d6a4f;
+            --accent-light: #e8f5ee;
+            --accent-mid: #74c69d;
+            --yellow: #f4a261;
+            --yellow-light: #fff3e8;
+            --red: #e07070;
+            --red-light: #fdeaea;
+            --blue: #5b8dee;
+            --blue-light: #eef3fd;
+            --tag-green: #d1f0e0;
+            --tag-green-text: #1a6640;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 10px;
+            --radius-sm: 6px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column
+        }
+
+        /* NAV */
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            padding: 0 24px;
+            height: 48px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            z-index: 10
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: -0.3px;
+            color: var(--text);
+            margin-right: 8px
+        }
+
+        .logo span {
+            color: var(--accent)
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px
+        }
+
+        .nav-tab {
+            padding: 5px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text2);
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: all .15s
+        }
+
+        .nav-tab:hover {
+            background: var(--surface2);
+            color: var(--text)
+        }
+
+        .nav-tab.active {
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 600
+        }
+
+        .nav-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .user-email {
+            font-size: 13px;
+            color: var(--text2)
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px
+        }
+
+        /* PAGES */
+        .page {
+            display: none;
+            flex: 1;
+            overflow: hidden
+        }
+
+        .page.active {
+            display: flex
+        }
+
+        /* ===== CHAT PAGE ===== */
+        #chat-page {
+            flex-direction: row;
+            height: calc(100vh - 48px)
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0
+        }
+
+        .sidebar-header {
+            padding: 16px 14px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text3);
+            letter-spacing: .6px;
+            text-transform: uppercase
+        }
+
+        .session-item {
+            padding: 9px 14px;
+            cursor: pointer;
+            border-radius: 0;
+            font-size: 13px;
+            color: var(--text2);
+            transition: all .12s;
+            border-left: 2px solid transparent;
+            line-height: 1.4
+        }
+
+        .session-item:hover {
+            background: var(--surface2);
+            color: var(--text)
+        }
+
+        .session-item.active {
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 500;
+            border-left-color: var(--accent)
+        }
+
+        .new-chat-btn {
+            margin: 10px 12px 14px;
+            padding: 8px 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity .15s
+        }
+
+        .new-chat-btn:hover {
+            opacity: .9
+        }
+
+        /* Chat main */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+        .chat-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            flex-shrink: 0
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #52b788;
+            flex-shrink: 0
+        }
+
+        .chat-title {
+            font-weight: 600;
+            font-size: 14px
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--bg)
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 4px
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 4px
+        }
+
+        /* Messages */
+        .msg {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            animation: msgIn .2s ease
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .msg.user {
+            flex-direction: row-reverse
+        }
+
+        .msg-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-top: 2px
+        }
+
+        .msg.ai .msg-avatar {
+            background: var(--accent-light);
+            color: var(--accent)
+        }
+
+        .msg.user .msg-avatar {
+            background: var(--text);
+            color: #fff
+        }
+
+        .msg-bubble {
+            max-width: 420px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            line-height: 1.6;
+            font-size: 13.5px
+        }
+
+        .msg.ai .msg-bubble {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 4px 12px 12px 12px
+        }
+
+        .msg.user .msg-bubble {
+            background: var(--accent);
+            color: #fff;
+            border-radius: 12px 4px 12px 12px
+        }
+
+        .msg-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500
+        }
+
+        .tag.green {
+            background: var(--tag-green);
+            color: var(--tag-green-text)
+        }
+
+        .tag.yellow {
+            background: var(--yellow-light);
+            color: #b5560a
+        }
+
+        .tag.blue {
+            background: var(--blue-light);
+            color: #2a5bbf
+        }
+
+        .tag.red {
+            background: var(--red-light);
+            color: #b03030
+        }
+
+        .tag::before {
+            content: '✓';
+            font-size: 10px
+        }
+
+        .tag.blue::before {
+            content: '📅'
+        }
+
+        .tag.red::before {
+            content: '📧'
+        }
+
+        .msg-source {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            background: #e8f5ee;
+            color: #1a6640;
+            margin-top: 8px
+        }
+
+        /* Chat input */
+        .chat-input-area {
+            padding: 14px 20px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            color: var(--text);
+            background: var(--bg);
+            resize: none;
+            outline: none;
+            transition: border-color .15s;
+            line-height: 1.5;
+            min-height: 42px;
+            max-height: 120px
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent)
+        }
+
+        .send-btn {
+            padding: 10px 16px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity .15s;
+            white-space: nowrap
+        }
+
+        .send-btn:hover {
+            opacity: .88
+        }
+
+        /* Agent activity panel */
+        .agent-panel {
+            width: 240px;
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow: hidden
+        }
+
+        .agent-panel-header {
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text3);
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .agent-log {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px
+        }
+
+        .agent-log::-webkit-scrollbar {
+            width: 3px
+        }
+
+        .agent-log::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 3px
+        }
+
+        .agent-entry {
+            margin-bottom: 14px;
+            animation: msgIn .25s ease
+        }
+
+        .agent-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text);
+            margin-bottom: 2px
+        }
+
+        .agent-detail {
+            font-size: 12px;
+            color: var(--text2);
+            line-height: 1.4;
+            font-family: 'DM Mono', monospace;
+            margin-bottom: 4px
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600
+        }
+
+        .status-badge.ok {
+            background: var(--tag-green);
+            color: var(--tag-green-text)
+        }
+
+        .status-badge.routed {
+            background: var(--blue-light);
+            color: #2a5bbf
+        }
+
+        .agent-footer {
+            padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            font-size: 11.5px;
+            color: var(--text3);
+            font-family: 'DM Mono', monospace
+        }
+
+        /* ===== DASHBOARD PAGE ===== */
+        #dashboard-page {
+            flex-direction: column;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+            padding: 24px;
+            gap: 20px;
+            background: var(--bg)
+        }
+
+        #dashboard-page::-webkit-scrollbar {
+            width: 4px
+        }
+
+        #dashboard-page::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 4px
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            box-shadow: var(--shadow)
+        }
+
+        .stat-label {
+            font-size: 11.5px;
+            color: var(--text3);
+            font-weight: 500;
+            margin-bottom: 6px
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 600;
+            letter-spacing: -1px;
+            color: var(--text);
+            line-height: 1
+        }
+
+        .stat-sub {
+            font-size: 12px;
+            margin-top: 4px;
+            font-weight: 500
+        }
+
+        .stat-sub.green {
+            color: var(--accent)
+        }
+
+        .stat-sub.yellow {
+            color: #b5560a
+        }
+
+        .stat-sub.red {
+            color: var(--red)
+        }
+
+        .stat-sub.blue {
+            color: var(--blue)
+        }
+
+        /* Main content area */
+        .dashboard-body {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 16px
+        }
+
+        /* Task list */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow)
+        }
+
+        .card-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 14px
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 4px
+        }
+
+        .filter-btn {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1.5px solid var(--border);
+            background: none;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all .12s;
+            font-family: 'DM Sans', sans-serif
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent)
+        }
+
+        .filter-btn:hover:not(.active) {
+            background: var(--surface2)
+        }
+
+        /* Task table */
+        .task-table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .task-table th {
+            padding: 8px 18px;
+            text-align: left;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text3);
+            letter-spacing: .3px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .task-table td {
+            padding: 11px 18px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: middle
+        }
+
+        .task-table tr:last-child td {
+            border-bottom: none
+        }
+
+        .task-table tr:hover td {
+            background: var(--surface2)
+        }
+
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 600
+        }
+
+        .priority-badge.high {
+            background: var(--red-light);
+            color: #b03030
+        }
+
+        .priority-badge.medium {
+            background: var(--yellow-light);
+            color: #b5560a
+        }
+
+        .priority-badge.low {
+            background: var(--blue-light);
+            color: #2a5bbf
+        }
+
+        .status-badge-table {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500
+        }
+
+        .status-badge-table.inprogress {
+            background: var(--blue-light);
+            color: #2a5bbf
+        }
+
+        .status-badge-table.pending {
+            background: var(--surface2);
+            color: var(--text2)
+        }
+
+        .status-badge-table.done {
+            background: var(--tag-green);
+            color: var(--tag-green-text)
+        }
+
+        .source-text {
+            font-size: 12px;
+            color: var(--text3)
+        }
+
+        /* Calendar sidebar */
+        .calendar-side {
+            display: flex;
+            flex-direction: column;
+            gap: 14px
+        }
+
+        .week-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow)
+        }
+
+        .week-header {
+            padding: 14px 16px 10px;
+            font-weight: 600;
+            font-size: 14px
+        }
+
+        .day-group {
+            padding: 0 16px 12px
+        }
+
+        .day-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text3);
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding-top: 8px
+        }
+
+        .cal-event {
+            background: var(--accent-light);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 7px 10px;
+            margin-bottom: 6px
+        }
+
+        .cal-time {
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 2px;
+            font-family: 'DM Mono', monospace
+        }
+
+        .cal-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text)
+        }
+
+        .cal-source {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 1px
+        }
+
+        /* Loading state */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 10px 14px
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-mid);
+            animation: bounce .9s infinite
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: .2s
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: .4s
+        }
+
+        @keyframes bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0)
+            }
+
+            30% {
+                transform: translateY(-5px)
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <span class="logo">Orchest<span>AI</span></span>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showPage('chat')">Chat</button>
+            <button class="nav-tab" onclick="showPage('dashboard')">Tasks</button>
+            <button class="nav-tab" onclick="showPage('dashboard')">Calendar</button>
+            <button class="nav-tab" onclick="showPage('dashboard')">Logs</button>
+        </div>
+        <div class="nav-right">
+            <span class="user-email">user@company.com</span>
+            <div class="avatar">U</div>
+        </div>
+    </nav>
+
+    <!-- ===== CHAT PAGE ===== -->
+    <div class="page active" id="chat-page">
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">Sessions</div>
+            <div class="session-item active">Project kickoff planning</div>
+            <div class="session-item">Q3 budget review tasks</div>
+            <div class="session-item">Team sync scheduling</div>
+            <div class="session-item">Vendor contract follow-up</div>
+            <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
+        </div>
+
+        <!-- Chat main -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <div class="status-dot"></div>
+                <span class="chat-title" id="chat-title">Project kickoff planning</span>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <!-- Pre-populated messages -->
+                <div class="msg user">
+                    <div class="msg-avatar">U</div>
+                    <div class="msg-bubble">Create a task for the budget review, schedule 90 min on Thursday, and email
+                        Sarah the agenda.</div>
+                </div>
+                <div class="msg ai">
+                    <div class="msg-avatar">AI</div>
+                    <div>
+                        <div class="msg-bubble">
+                            All done! Here's what I executed:
+                            <div class="msg-tags">
+                                <span class="tag green">Task created</span>
+                                <span class="tag yellow">Thu 2–3:30pm blocked</span>
+                                <span class="tag red">Email sent to Sarah</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="msg user">
+                    <div class="msg-avatar">U</div>
+                    <div class="msg-bubble">What are my high-priority tasks due this week?</div>
+                </div>
+                <div class="msg ai">
+                    <div class="msg-avatar">AI</div>
+                    <div>
+                        <div class="msg-bubble">
+                            You have 3 high-priority tasks:<br>
+                            1. Budget Review — Thu Jul 31<br>
+                            2. Q3 Report Draft — Mon Jul 28<br>
+                            3. Vendor Contract Review — Wed Jul 30
+                            <div class="msg-tags">
+                                <span class="tag blue" style="--tag-before:'🗄'">AlloyDB query</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="msg user">
+                    <div class="msg-avatar">U</div>
+                    <div class="msg-bubble">Reschedule the meeting I just booked to Friday instead.</div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="chat-input-row">
+                    <textarea class="chat-input" id="chat-input" placeholder="Ask OrchestAI anything…" rows="1"
+                        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+                    <button class="send-btn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Activity -->
+        <div class="agent-panel">
+            <div class="agent-panel-header">Agent Activity</div>
+            <div class="agent-log" id="agent-log">
+                <div class="agent-entry">
+                    <div class="agent-name">Orchestrator</div>
+                    <div class="agent-detail">Intent: create_task + create_event + send_email</div>
+                    <span class="status-badge routed">routed</span>
+                </div>
+                <div class="agent-entry">
+                    <div class="agent-name">TaskAgent</div>
+                    <div class="agent-detail">INSERT tasks (Budget Review, High)</div>
+                    <span class="status-badge ok">200 OK</span>
+                </div>
+                <div class="agent-entry">
+                    <div class="agent-name">CalendarAgent</div>
+                    <div class="agent-detail">MCP gcal.create_event Thu 14:00</div>
+                    <span class="status-badge ok">200 OK</span>
+                </div>
+                <div class="agent-entry">
+                    <div class="agent-name">CommAgent</div>
+                    <div class="agent-detail">MCP gmail.send to sarah@co.com</div>
+                    <span class="status-badge ok">200 OK</span>
+                </div>
+                <div class="agent-entry">
+                    <div class="agent-name">CalendarAgent</div>
+                    <div class="agent-detail">MCP gcal.update_event → Fri 14:00</div>
+                    <span class="status-badge ok">200 OK</span>
+                </div>
+            </div>
+            <div class="agent-footer" id="agent-footer">1,842ms · 5 tool calls</div>
+        </div>
+    </div>
+
+    <!-- ===== DASHBOARD PAGE ===== -->
+    <div class="page" id="dashboard-page">
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Total tasks</div>
+                <div class="stat-value">24</div>
+                <div class="stat-sub green">+3 this week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Due this week</div>
+                <div class="stat-value">7</div>
+                <div class="stat-sub yellow">3 high-priority</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Overdue</div>
+                <div class="stat-value">2</div>
+                <div class="stat-sub red">Action needed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Completed</div>
+                <div class="stat-value">15</div>
+                <div class="stat-sub blue">63% completion</div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="dashboard-body">
+            <!-- Task list card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Task list</span>
+                    <div class="filter-group">
+                        <button class="filter-btn active">All</button>
+                        <button class="filter-btn" onclick="filterTasks('high',this)">High</button>
+                        <button class="filter-btn" onclick="filterTasks('week',this)">This week</button>
+                    </div>
+                </div>
+                <table class="task-table" id="task-table">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Priority</th>
+                            <th>Due</th>
+                            <th>Status</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody id="task-tbody">
+                        <tr data-priority="high" data-week="true">
+                            <td>Budget Review</td>
+                            <td><span class="priority-badge high">High</span></td>
+                            <td>Thu Jul 31</td>
+                            <td><span class="status-badge-table inprogress">In progress</span></td>
+                            <td><span class="source-text">OrchestAI</span></td>
+                        </tr>
+                        <tr data-priority="high" data-week="true">
+                            <td>Q3 Report Draft</td>
+                            <td><span class="priority-badge high">High</span></td>
+                            <td>Mon Jul 28</td>
+                            <td><span class="status-badge-table inprogress">In progress</span></td>
+                            <td><span class="source-text">OrchestAI</span></td>
+                        </tr>
+                        <tr data-priority="high" data-week="true">
+                            <td>Vendor Contract Review</td>
+                            <td><span class="priority-badge high">High</span></td>
+                            <td>Wed Jul 30</td>
+                            <td><span class="status-badge-table pending">Pending</span></td>
+                            <td><span class="source-text">OrchestAI</span></td>
+                        </tr>
+                        <tr data-priority="medium" data-week="false">
+                            <td>Team Onboarding Deck</td>
+                            <td><span class="priority-badge medium">Medium</span></td>
+                            <td>Fri Aug 1</td>
+                            <td><span class="status-badge-table pending">Pending</span></td>
+                            <td><span class="source-text">Manual</span></td>
+                        </tr>
+                        <tr data-priority="low" data-week="false">
+                            <td>Infrastructure Audit</td>
+                            <td><span class="priority-badge low">Low</span></td>
+                            <td>Mon Aug 4</td>
+                            <td><span class="status-badge-table pending">Pending</span></td>
+                            <td><span class="source-text">OrchestAI</span></td>
+                        </tr>
+                        <tr data-priority="medium" data-week="false">
+                            <td>Client Proposal v2</td>
+                            <td><span class="priority-badge medium">Medium</span></td>
+                            <td>Tue Aug 5</td>
+                            <td><span class="status-badge-table done">Done</span></td>
+                            <td><span class="source-text">Manual</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Calendar sidebar -->
+            <div class="calendar-side">
+                <div class="week-card">
+                    <div class="week-header">This week</div>
+                    <div class="day-group">
+                        <div class="day-label">Mon Jul 28</div>
+                        <div class="cal-event">
+                            <div class="cal-time">10:00 – 11:30</div>
+                            <div class="cal-title">Q3 Report Work Block</div>
+                            <div class="cal-source">via OrchestAI</div>
+                        </div>
+                    </div>
+                    <div class="day-group">
+                        <div class="day-label">Thu Jul 31</div>
+                        <div class="cal-event">
+                            <div class="cal-time">14:00 – 15:30</div>
+                            <div class="cal-title">Budget Review Block</div>
+                            <div class="cal-source">via OrchestAI</div>
+                        </div>
+                        <div class="cal-event">
+                            <div class="cal-time">16:00 – 17:00</div>
+                            <div class="cal-title">1:1 with Manager</div>
+                            <div class="cal-source">Manual</div>
+                        </div>
+                    </div>
+                    <div class="day-group">
+                        <div class="day-label">Fri Aug 1</div>
+                        <div class="cal-event">
+                            <div class="cal-time">10:00 – 11:00</div>
+                            <div class="cal-title">Team Kickoff Meeting</div>
+                            <div class="cal-source">via OrchestAI</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://orchestai-zoc5uym6ra-uc.a.run.app';
+        let userId = 'u1';
+        let sessionId = 'sess_' + Date.now();
+        let toolCallCount = 0;
+        let startTime = null;
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            if (page === 'chat') {
+                document.getElementById('chat-page').classList.add('active');
+                document.querySelectorAll('.nav-tab')[0].classList.add('active');
+            } else {
+                document.getElementById('dashboard-page').classList.add('active');
+                document.querySelectorAll('.nav-tab')[1].classList.add('active');
+                loadTasks();
+            }
+        }
+
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
+
+        function handleKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        }
+
+        function newChat() {
+            sessionId = 'sess_' + Date.now();
+            document.getElementById('chat-messages').innerHTML = '';
+            document.getElementById('agent-log').innerHTML = '';
+            document.getElementById('agent-footer').textContent = 'Ready';
+            document.getElementById('chat-title').textContent = 'New conversation';
+            document.querySelectorAll('.session-item').forEach(s => s.classList.remove('active'));
+        }
+
+        function appendMessage(role, content, tags) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg ' + role;
+            let tagsHtml = '';
+            if (tags && tags.length) {
+                tagsHtml = '<div class="msg-tags">' + tags.map(t =>
+                    `<span class="tag ${t.color}">${t.label}</span>`
+                ).join('') + '</div>';
+            }
+            div.innerHTML = `
+    <div class="msg-avatar">${role === 'ai' ? 'AI' : 'U'}</div>
+    <div><div class="msg-bubble">${content}${tagsHtml}</div></div>
+  `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showTyping() {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg ai';
+            div.id = 'typing-msg';
+            div.innerHTML = `
+    <div class="msg-avatar">AI</div>
+    <div><div class="msg-bubble" style="padding:8px 14px">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div></div>
+  `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeTyping() {
+            const t = document.getElementById('typing-msg');
+            if (t) t.remove();
+        }
+
+        function addAgentEntry(name, detail, badgeClass, badgeText) {
+            const log = document.getElementById('agent-log');
+            const div = document.createElement('div');
+            div.className = 'agent-entry';
+            div.innerHTML = `
+    <div class="agent-name">${name}</div>
+    <div class="agent-detail">${detail}</div>
+    <span class="status-badge ${badgeClass}">${badgeText}</span>
+  `;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+            toolCallCount++;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            input.style.height = 'auto';
+            appendMessage('user', text);
+            showTyping();
+            startTime = Date.now();
+
+            // Clear old agent log
+            document.getElementById('agent-log').innerHTML = '';
+            toolCallCount = 0;
+
+            // Show orchestrator routing
+            addAgentEntry('Orchestrator', 'Parsing intent…', 'routed', 'routing');
+
+            try {
+                const res = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, session_id: sessionId, message: text })
+                });
+
+                const data = await res.json();
+                removeTyping();
+
+                // Build tags from actions_taken
+                const tagColorMap = { TaskAgent: 'green', CalendarAgent: 'yellow', CommsAgent: 'red', CommAgent: 'red' };
+                const tags = (data.actions_taken || []).map(a => ({
+                    label: a.agent + ': ' + a.action,
+                    color: tagColorMap[a.agent] || 'blue'
+                }));
+
+                appendMessage('ai', data.response || data.detail || 'Done!', tags);
+
+                // Update agent log from actions
+                document.getElementById('agent-log').innerHTML = '';
+                addAgentEntry('Orchestrator', 'Intent parsed → routed', 'routed', 'routed');
+                (data.actions_taken || []).forEach(a => {
+                    addAgentEntry(a.agent, a.action, 'ok', '200 OK');
+                });
+
+                const elapsed = Date.now() - startTime;
+                document.getElementById('agent-footer').textContent =
+                    `${elapsed}ms · ${toolCallCount} tool calls`;
+
+            } catch (err) {
+                removeTyping();
+                appendMessage('ai', '⚠️ Could not reach the backend. Check your Cloud Run URL or CORS settings.');
+                document.getElementById('agent-footer').textContent = 'Error';
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                const res = await fetch(`${API_BASE}/tasks?user_id=${userId}`);
+                const tasks = await res.json();
+                if (!tasks.length) return;
+                const tbody = document.getElementById('task-tbody');
+                tbody.innerHTML = '';
+                tasks.forEach(t => {
+                    const priorityClass = (t.priority || 'medium').toLowerCase();
+                    const statusClass = (t.status || 'pending').toLowerCase().replace(' ', '');
+                    const statusLabel = t.status === 'pending' ? 'Pending' : t.status === 'in_progress' ? 'In progress' : 'Done';
+                    tbody.innerHTML += `
+        <tr data-priority="${priorityClass}">
+          <td>${t.title}</td>
+          <td><span class="priority-badge ${priorityClass}">${t.priority || 'Medium'}</span></td>
+          <td>${t.due_date && t.due_date !== 'None' ? t.due_date.split('T')[0] : '—'}</td>
+          <td><span class="status-badge-table ${statusClass}">${statusLabel}</span></td>
+          <td><span class="source-text">OrchestAI</span></td>
+        </tr>`;
+                });
+            } catch (e) { /* keep static data if API fails */ }
+        }
+
+        function filterTasks(type, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('#task-tbody tr').forEach(row => {
+                if (type === 'high') {
+                    row.style.display = row.dataset.priority === 'high' ? '' : 'none';
+                } else if (type === 'week') {
+                    row.style.display = row.dataset.week === 'true' ? '' : 'none';
+                } else {
+                    row.style.display = '';
+                }
+            });
+        }
+
+        // Select sessions
+        document.querySelectorAll('.session-item').forEach(item => {
+            item.addEventListener('click', function () {
+                document.querySelectorAll('.session-item').forEach(s => s.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('chat-title').textContent = this.textContent;
+            });
+        });
+    </script>
+</body>
+
+</html>

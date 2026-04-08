@@ -18,14 +18,29 @@ from agents.orchestrator import run_orchestrator
 from db.database import AsyncSessionLocal
 from db.models import Task
 from sqlalchemy import select
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="OrchestAI", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 class ChatRequest(BaseModel):
     user_id: str
     session_id: str
     message: str
+
+@app.get("/")
+def serve_ui():
+    return FileResponse("static/index.html")
 
 
 @app.get("/health")
