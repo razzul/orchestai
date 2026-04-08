@@ -44,6 +44,7 @@ class ExecutionLog(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id = Column(String, nullable=True)
+    user_id = Column(String, nullable=True)
     agent = Column(String)
     action = Column(String)
     status = Column(String)

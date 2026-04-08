@@ -43,6 +43,7 @@ async def startup_event():
         try:
             await conn.run_sync(Base.metadata.create_all)
             await conn.execute(text("ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS title VARCHAR;"))
+            await conn.execute(text("ALTER TABLE execution_logs ADD COLUMN IF NOT EXISTS user_id VARCHAR;"))
         except Exception as e:
             print(f"Schema update error: {e}")
 
@@ -181,10 +182,12 @@ async def delete_session_endpoint(session_id: str):
 
 
 @app.get("/logs")
-async def get_logs(session_id: str = None):
+async def get_logs(user_id: str = None, session_id: str = None):
     from db.models import ExecutionLog
     async with AsyncSessionLocal() as db:
         query = select(ExecutionLog).order_by(ExecutionLog.timestamp.desc())
+        if user_id:
+            query = query.where(ExecutionLog.user_id == user_id)
         if session_id:
             query = query.where(ExecutionLog.session_id == session_id)
         result = await db.execute(query)

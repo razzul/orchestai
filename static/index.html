@@ -1225,7 +1225,6 @@
         <div class="logo">Orchest<span>AI</span></div>
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showPage('chat')">Chat</button>
-            <button class="nav-tab" onclick="showPage('dashboard')">Dashboard</button>
             <button class="nav-tab" onclick="showPage('tasks')">Tasks</button>
             <button class="nav-tab" onclick="showPage('calendar')">Calendar</button>
             <button class="nav-tab" onclick="showPage('logs')">Logs</button>
@@ -1935,7 +1934,7 @@
             const tbody = document.getElementById('logs-tbody');
             tbody.innerHTML = '<tr><td colspan="5">Loading logs...</td></tr>';
             try {
-                const res = await fetch(`${API_BASE}/logs`);
+                const res = await fetch(`${API_BASE}/logs?user_id=${userId}`);
                 const logs = await res.json();
                 tbody.innerHTML = '';
                 logs.forEach(log => {

@@ -39,11 +39,12 @@ async def update_session_title(session_id: str, title: str):
             session.title = title
             await db.commit()
 
-async def save_execution_logs(session_id: str, actions: list):
+async def save_execution_logs(session_id: str, user_id: str, actions: list):
     async with AsyncSessionLocal() as db:
         for action in actions:
             log = ExecutionLog(
                 session_id=session_id,
+                user_id=user_id,
                 agent=action["agent"],
                 action=action["action"],
                 status=action["status"]
@@ -136,7 +137,7 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     history.append({"role": "user", "content": message})
     history.append({"role": "assistant", "content": final_text})
     await save_session(session_id, history)
-    await save_execution_logs(session_id, actions_taken)
+    await save_execution_logs(session_id, user_id, actions_taken)
 
     return {
         "response": final_text,
