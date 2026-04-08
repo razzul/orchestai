@@ -1,6 +1,6 @@
 # agents/calendar_agent.py
 import google.generativeai as genai
-from mcp.calendar_mcp import create_calendar_event, list_calendar_events, delete_calendar_event
+from tools.calendar_mcp import create_calendar_event, list_calendar_events, delete_calendar_event
 import os, json
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))

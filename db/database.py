@@ -8,6 +8,10 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("ALLOYDB_URL")
 
+# Cloud Run uses Unix socket via Cloud SQL proxy, local uses TCP
+if DATABASE_URL is None:
+    raise RuntimeError("ALLOYDB_URL is not set")
+
 engine = create_async_engine(DATABASE_URL, echo=True)
 
 AsyncSessionLocal = sessionmaker(
