@@ -32,6 +32,18 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+@app.on_event("startup")
+async def startup_event():
+    from db.database import engine
+    from db.models import Base
+    from sqlalchemy import text
+    async with engine.begin() as conn:
+        try:
+            await conn.run_sync(Base.metadata.create_all)
+            await conn.execute(text("ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS title VARCHAR;"))
+        except Exception as e:
+            print(f"Schema update error: {e}")
+
 
 class ChatRequest(BaseModel):
     user_id: str
