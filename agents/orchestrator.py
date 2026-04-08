@@ -57,7 +57,7 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     new_title = title
 
     # Step 1: Decide which agents are needed
-    model = genai.GenerativeModel("gemini-3-flash-preview")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     routing_prompt = f"""
     You are OrchestAI, a productivity orchestrator.
     User message: "{message}"
@@ -89,19 +89,19 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
 
     # Step 2: Run each needed agent
     if "task" in agents_needed:
-        agent_resp = await run_task_agent(user_id, message)
+        agent_resp = await run_task_agent(user_id, message, history)
         results.append(agent_resp["response"])
         actions_taken.append({"agent": "TaskAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
         display_tags.append({"label": agent_resp.get('tag_label', 'Task created'), "agent": "TaskAgent"})
 
     if "calendar" in agents_needed:
-        agent_resp = await run_calendar_agent(message)
+        agent_resp = await run_calendar_agent(message, history)
         results.append(agent_resp["response"])
         actions_taken.append({"agent": "CalendarAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
         display_tags.append({"label": agent_resp.get('tag_label', 'Event created'), "agent": "CalendarAgent"})
 
     if "comms" in agents_needed:
-        agent_resp = await run_comms_agent(message)
+        agent_resp = await run_comms_agent(message, history)
         results.append(agent_resp["response"])
         # Use CommAgent (singular) for the display if requested by wireframe
         actions_taken.append({"agent": "CommAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
