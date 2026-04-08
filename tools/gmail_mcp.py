@@ -4,11 +4,21 @@ from google.oauth2.credentials import Credentials
 import base64
 import json
 from email.mime.text import MIMEText
+import os
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TOKEN_PATH = os.path.join(BASE_DIR, "gmail_token.json")
 
 def get_gmail_service():
-    with open("gmail_token.json", "r") as f:
-        token_data = json.load(f)
+    # Attempt to load token from environment variable first (Cloud Run)
+    token_str = os.environ.get("GMAIL_TOKEN_JSON")
+    if token_str:
+        token_data = json.loads(token_str)
+    else:
+        # Fallback to local file
+        with open(TOKEN_PATH, "r") as f:
+            token_data = json.load(f)
+
     creds = Credentials.from_authorized_user_info(token_data)
     return build("gmail", "v1", credentials=creds)
 

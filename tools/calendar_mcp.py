@@ -3,10 +3,22 @@ from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 from datetime import datetime, timezone
 import json
+import json
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TOKEN_PATH = os.path.join(BASE_DIR, "calendar_token.json")
 
 def get_calendar_service():
-    with open("calendar_token.json", "r") as f:
-        token_data = json.load(f)
+    # Attempt to load token from environment variable first (Cloud Run)
+    token_str = os.environ.get("CALENDAR_TOKEN_JSON")
+    if token_str:
+        token_data = json.loads(token_str)
+    else:
+        # Fallback to local file
+        with open(TOKEN_PATH, "r") as f:
+            token_data = json.load(f)
+    
     creds = Credentials.from_authorized_user_info(token_data)
     return build("calendar", "v3", credentials=creds)
 

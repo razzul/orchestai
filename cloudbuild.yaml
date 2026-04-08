@@ -28,7 +28,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-secrets'
-      - 'GOOGLE_API_KEY=google-api-key:latest,ALLOYDB_URL=alloydb-url:latest'
+      - 'GOOGLE_API_KEY=google-api-key:latest,ALLOYDB_URL=alloydb-url:latest,CALENDAR_TOKEN_JSON=calendar-token:latest,GMAIL_TOKEN_JSON=gmail-token:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/orchestai'
