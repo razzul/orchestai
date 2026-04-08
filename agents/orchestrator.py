@@ -71,26 +71,29 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     routing_response = model.generate_content(routing_prompt)
     raw = routing_response.text.strip().replace("```json", "").replace("```", "").strip()
     routing = json.loads(raw)
-
+    
     agents_needed = routing.get("agents", [])
+    intent_map = {"task": "create task", "calendar": "create_event", "comms": "send_email"}
+    intent_str = " + ".join([intent_map.get(a, a) for a in agents_needed])
+    actions_taken = [{"agent": "Orchestrator", "action": f"Intent: {intent_str}", "status": "routed"}]
+    
     results = []
-    actions_taken = []
 
     # Step 2: Run each needed agent
     if "task" in agents_needed:
-        result = await run_task_agent(user_id, message)
-        results.append(result)
-        actions_taken.append({"agent": "TaskAgent", "action": "task_operation", "status": "success"})
+        agent_resp = await run_task_agent(user_id, message)
+        results.append(agent_resp["response"])
+        actions_taken.append({"agent": "TaskAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
 
     if "calendar" in agents_needed:
-        result = await run_calendar_agent(message)
-        results.append(result)
-        actions_taken.append({"agent": "CalendarAgent", "action": "calendar_operation", "status": "success"})
+        agent_resp = await run_calendar_agent(message)
+        results.append(agent_resp["response"])
+        actions_taken.append({"agent": "CalendarAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
 
     if "comms" in agents_needed:
-        result = await run_comms_agent(message)
-        results.append(result)
-        actions_taken.append({"agent": "CommsAgent", "action": "email_operation", "status": "success"})
+        agent_resp = await run_comms_agent(message)
+        results.append(agent_resp["response"])
+        actions_taken.append({"agent": "CommsAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
 
     # Step 3: Synthesize final response
     synthesis_prompt = f"""

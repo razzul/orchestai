@@ -1187,7 +1187,8 @@
                 appendMessage('ai', data.response || 'Done!', tags);
                 
                 (data.actions_taken || []).forEach(a => {
-                    addAgentEntry(a.agent, a.action, 'ok', '200 OK');
+                    const badgeClass = a.status === 'routed' ? 'routed' : 'ok';
+                    addAgentEntry(a.agent, a.action, badgeClass, a.status.toUpperCase());
                 });
 
                 const elapsed = Date.now() - startTime;

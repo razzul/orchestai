@@ -64,11 +64,20 @@ async def run_task_agent(user_id: str, instruction: str) -> str:
 
     if data["action"] == "create_task":
         result = await create_task(user_id, data["title"], data.get("due_date"), data.get("priority", "medium"))
-        return f"Task created: {result['title']}"
+        return {
+            "response": f"Task created: {result['title']}",
+            "log_entry": f"INSERT tasks ({result['title']}, {data.get('priority', 'medium').capitalize()})"
+        }
     elif data["action"] == "list_tasks":
         tasks = await list_tasks(user_id)
-        return f"Your tasks: {json.dumps(tasks)}"
+        return {
+            "response": f"Your tasks: {json.dumps(tasks)}",
+            "log_entry": "SELECT * FROM tasks"
+        }
     elif data["action"] == "update_task_status":
         result = await update_task_status(data["task_id"], data["status"])
-        return f"Task updated: {result}"
-    return "Task operation completed."
+        return {
+            "response": f"Task updated: {result}",
+            "log_entry": f"UPDATE tasks SET status='{data['status']}' WHERE id='{data['task_id'][:8]}...'"
+        }
+    return {"response": "Task operation completed.", "log_entry": "TASK_NOP"}

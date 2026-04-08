@@ -29,11 +29,22 @@ async def run_calendar_agent(instruction: str) -> str:
             data["end_time"],
             data.get("description", "")
         )
-        return f"Event created: {result}"
+        # Extract time for log
+        time_str = data["start_time"].split("T")[1][:5] if "T" in data["start_time"] else data["start_time"]
+        return {
+            "response": f"Event created: {result}",
+            "log_entry": f"MCP gcal.create_event {data['summary']} at {time_str}"
+        }
     elif data["action"] == "list_events":
         events = list_calendar_events(data["date"])
-        return f"Events on {data['date']}: {json.dumps(events)}"
+        return {
+            "response": f"Events on {data['date']}: {json.dumps(events)}",
+            "log_entry": f"MCP gcal.list_events for {data['date']}"
+        }
     elif data["action"] == "delete_event":
         result = delete_calendar_event(data["event_id"])
-        return f"Event deleted: {result}"
-    return "Calendar operation completed."
+        return {
+            "response": f"Event deleted: {result}",
+            "log_entry": f"MCP gcal.delete_event {data['event_id'][:8]}..."
+        }
+    return {"response": "Calendar operation completed.", "log_entry": "CAL_NOP"}

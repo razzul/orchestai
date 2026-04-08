@@ -24,11 +24,20 @@ async def run_comms_agent(instruction: str) -> str:
 
     if data["action"] == "send_email":
         result = send_email(data["to"], data["subject"], data["body"])
-        return f"Email sent: {result}"
+        return {
+            "response": f"Email sent: {result}",
+            "log_entry": f"MCP gmail.send to {data['to']}"
+        }
     elif data["action"] == "list_emails":
         emails = list_emails(data.get("query", ""))
-        return f"Emails found: {json.dumps(emails)}"
+        return {
+            "response": f"Emails found: {json.dumps(emails)}",
+            "log_entry": f"MCP gmail.list_emails query: {data.get('query', 'all')}"
+        }
     elif data["action"] == "draft_email":
         result = draft_email(data["to"], data["subject"], data["body"])
-        return f"Draft created: {result}"
-    return "Email operation completed."
+        return {
+            "response": f"Draft created: {result}",
+            "log_entry": f"MCP gmail.draft to {data['to']}"
+        }
+    return {"response": "Email operation completed.", "log_entry": "EMAIL_NOP"}
