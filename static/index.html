@@ -8,6 +8,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
         rel="stylesheet" />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * {
             box-sizing: border-box;
@@ -128,7 +129,67 @@
             justify-content: center;
             font-weight: 700;
             font-size: 13px;
+            font-size: 13px;
             border: 1px solid #a7f3d0;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* LOGIN MODAL */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .login-card {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            border: 1px solid var(--border);
+            max-width: 420px;
+            width: 90%;
+            animation: msgIn 0.4s ease-out;
+        }
+
+        .login-logo {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--text);
+        }
+
+        .login-logo span {
+            color: var(--accent);
+        }
+
+        .login-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .login-desc {
+            font-size: 15px;
+            color: var(--text2);
+            margin-bottom: 32px;
+            line-height: 1.6;
         }
 
         /* PAGES */
@@ -1111,23 +1172,33 @@
             transform: translateY(-1px);
         }
     </style>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
 
-    <!-- NAV -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="login-logo">Orchest<span>AI</span></div>
+            <h2 class="login-title">Welcome Back</h2>
+            <p class="login-desc">Sign in with your Google account to access your workspace, tasks, and agents.</p>
+            <div id="google-signin-btn" style="display: flex; justify-content: center;"></div>
+        </div>
+    </div>
+
     <nav>
-        <span class="logo">Orchest<span style="color: #2d6a4f;">AI</span></span>
+        <div class="logo">Orchest<span>AI</span></div>
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showPage('chat')">Chat</button>
+            <button class="nav-tab" onclick="showPage('dashboard')">Dashboard</button>
             <button class="nav-tab" onclick="showPage('tasks')">Tasks</button>
             <button class="nav-tab" onclick="showPage('calendar')">Calendar</button>
-            <button class="nav-tab" onclick="showPage('inbox')">Inbox</button>
             <button class="nav-tab" onclick="showPage('logs')">Logs</button>
         </div>
         <div class="nav-right">
-            <span class="user-email">user@company.com</span>
-            <div class="avatar">U</div>
+            <span class="user-email" id="nav-user-email"></span>
+            <div class="avatar" id="nav-user-avatar">?</div>
+            <button class="nav-tab" onclick="logout()" style="color: var(--red); font-size: 12px;">Logout</button>
         </div>
     </nav>
 
@@ -1300,15 +1371,90 @@
 
     <script>
         const API_BASE = window.location.origin;
-        let userId = 'u1';
+        let userId = localStorage.getItem('orchestai_user_id');
         let sessionId = null;
         let toolCallCount = 0;
         let startTime = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            showPage('chat');
-            loadSessions();
+            initAuth();
+            if (userId) {
+                hideLogin();
+                showPage('chat');
+                loadSessions();
+                updateUserUI();
+            } else {
+                showLogin();
+            }
         });
+
+        function initAuth() {
+            const clientId = 'your-google-client-id.apps.googleusercontent.com'; // Should match .env
+            
+            google.accounts.id.initialize({
+                client_id: clientId,
+                callback: handleCredentialResponse
+            });
+            
+            google.accounts.id.renderButton(
+                document.getElementById("google-signin-btn"),
+                { theme: "outline", size: "large", width: 320 }
+            );
+        }
+
+        async function handleCredentialResponse(response) {
+            try {
+                const res = await fetch(`${API_BASE}/auth/google`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ credential: response.credential })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    userId = data.user_id;
+                    localStorage.setItem('orchestai_user_id', userId);
+                    localStorage.setItem('orchestai_user_info', JSON.stringify(data));
+                    
+                    hideLogin();
+                    updateUserUI();
+                    showPage('chat');
+                    loadSessions();
+                } else {
+                    alert("Auth failed on server.");
+                }
+            } catch (err) {
+                console.error("Login error", err);
+                alert("Login failed.");
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-overlay').style.display = 'flex';
+        }
+
+        function hideLogin() {
+            document.getElementById('login-overlay').style.display = 'none';
+        }
+
+        function updateUserUI() {
+            const userInfo = JSON.parse(localStorage.getItem('orchestai_user_info'));
+            if (userInfo) {
+                document.getElementById('nav-user-email').textContent = userInfo.email;
+                const avatar = document.getElementById('nav-user-avatar');
+                if (userInfo.picture) {
+                    avatar.innerHTML = `<img src="${userInfo.picture}" alt="${userInfo.name}">`;
+                } else {
+                    avatar.textContent = (userInfo.name || userInfo.email || '?').charAt(0).toUpperCase();
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('orchestai_user_id');
+            localStorage.removeItem('orchestai_user_info');
+            location.reload();
+        }
 
         function showPage(page) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));

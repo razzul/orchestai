@@ -7,6 +7,16 @@ import uuid
 
 Base = declarative_base()
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True)  # Google Sub (ID)
+    email = Column(String, unique=True, nullable=False)
+    name = Column(String)
+    picture = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class Task(Base):
     __tablename__ = "tasks"
 
