@@ -57,7 +57,7 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     new_title = title
 
     # Step 1: Decide which agents are needed
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
     routing_prompt = f"""
     You are OrchestAI, a productivity orchestrator.
     User message: "{message}"
@@ -79,7 +79,11 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     agents_needed = routing.get("agents", [])
     intent_map = {"task": "create task", "calendar": "create_event", "comms": "send_email"}
     intent_str = " + ".join([intent_map.get(a, a) for a in agents_needed])
-    actions_taken = [{"agent": "Orchestrator", "action": f"Intent: {intent_str}", "status": "routed"}]
+    
+    # actions_taken will hold detailed logs for the Activity Panel
+    actions_taken = [{"agent": "Orchestrator", "action": f"Intent: {intent_str}", "status": "ROUTED"}]
+    # display_tags will hold clean labels for the AI message bubble
+    display_tags = []
     
     results = []
 
@@ -88,16 +92,20 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
         agent_resp = await run_task_agent(user_id, message)
         results.append(agent_resp["response"])
         actions_taken.append({"agent": "TaskAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
+        display_tags.append({"label": agent_resp.get('tag_label', 'Task created'), "agent": "TaskAgent"})
 
     if "calendar" in agents_needed:
         agent_resp = await run_calendar_agent(message)
         results.append(agent_resp["response"])
         actions_taken.append({"agent": "CalendarAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
+        display_tags.append({"label": agent_resp.get('tag_label', 'Event created'), "agent": "CalendarAgent"})
 
     if "comms" in agents_needed:
         agent_resp = await run_comms_agent(message)
         results.append(agent_resp["response"])
-        actions_taken.append({"agent": "CommsAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
+        # Use CommAgent (singular) for the display if requested by wireframe
+        actions_taken.append({"agent": "CommAgent", "action": agent_resp["log_entry"], "status": "200 OK"})
+        display_tags.append({"label": agent_resp.get('tag_label', 'Email sent'), "agent": "CommAgent"})
 
     # Step 3: Synthesize final response
     synthesis_prompt = f"""
@@ -107,10 +115,11 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     """
     try:
         final_response_res = model.generate_content(synthesis_prompt)
-        final_text = final_response_res.text
+        # Use simple prefix if synthesis succeeded
+        final_text = "All done! Here's what I executed:\n" + final_response_res.text.strip()
     except Exception as e:
         print(f"Synthesis error: {e}")
-        final_text = "I've completed the requested actions, but I'm having trouble generating a summary right now. Your tasks and calendar have been updated."
+        final_text = "All done! Here's what I executed:"
 
     # Generate title if it's a "New Chat"
     if title == "New Chat":
@@ -132,5 +141,6 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     return {
         "response": final_text,
         "actions_taken": actions_taken,
+        "display_tags": display_tags,
         "title": new_title
     }

@@ -46,7 +46,7 @@ async def update_task_status(task_id: str, status: str) -> dict:
 
 async def run_task_agent(user_id: str, instruction: str) -> str:
     """Uses Gemini to decide which task operation to perform."""
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
     prompt = f"""
     You are a task manager. The user said: "{instruction}"
     User ID: {user_id}
@@ -64,24 +64,27 @@ async def run_task_agent(user_id: str, instruction: str) -> str:
         data = json.loads(raw)
     except Exception as e:
         print(f"Task agent error: {e}")
-        return {"response": "I'm having trouble processing your task request right now.", "log_entry": "TASK_ERROR"}
+        return {"response": "I'm having trouble processing your task request right now.", "log_entry": "TASK_ERROR", "tag_label": "Task error"}
 
     if data["action"] == "create_task":
         result = await create_task(user_id, data["title"], data.get("due_date"), data.get("priority", "medium"))
         return {
             "response": f"Task created: {result['title']}",
-            "log_entry": f"INSERT tasks ({result['title']}, {data.get('priority', 'medium').capitalize()})"
+            "log_entry": f"INSERT tasks ({result['title']}, {data.get('priority', 'medium').capitalize()})",
+            "tag_label": "Task created"
         }
     elif data["action"] == "list_tasks":
         tasks = await list_tasks(user_id)
         return {
             "response": f"Your tasks: {json.dumps(tasks)}",
-            "log_entry": "SELECT * FROM tasks"
+            "log_entry": "SELECT * FROM tasks",
+            "tag_label": "Tasks listed"
         }
     elif data["action"] == "update_task_status":
         result = await update_task_status(data["task_id"], data["status"])
         return {
             "response": f"Task updated: {result}",
-            "log_entry": f"UPDATE tasks SET status='{data['status']}' WHERE id='{data['task_id'][:8]}...'"
+            "log_entry": f"UPDATE tasks SET status='{data['status']}' WHERE id='{data['task_id'][:8]}...'",
+            "tag_label": f"Task {data['status']}"
         }
-    return {"response": "Task operation completed.", "log_entry": "TASK_NOP"}
+    return {"response": "Task operation completed.", "log_entry": "TASK_NOP", "tag_label": "Task done"}

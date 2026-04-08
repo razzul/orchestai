@@ -368,15 +368,10 @@
 
         .tag::before {
             content: '✓';
-            font-size: 10px
-        }
-
-        .tag.blue::before {
-            content: '📅'
-        }
-
-        .tag.red::before {
-            content: '📧'
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 4px
         }
 
         .msg-source {
@@ -1178,17 +1173,18 @@
                     document.getElementById('chat-title').value = data.title;
                 }
 
-                const tagColorMap = { TaskAgent: 'green', CalendarAgent: 'yellow', CommsAgent: 'red' };
-                const tags = (data.actions_taken || []).map(a => ({
-                    label: a.agent + ': ' + a.action,
-                    color: tagColorMap[a.agent] || 'blue'
+                const tagColorMap = { TaskAgent: 'blue', CalendarAgent: 'yellow', CommAgent: 'red' };
+                const tags = (data.display_tags || []).map(t => ({
+                    label: t.label,
+                    color: tagColorMap[t.agent] || 'blue'
                 }));
 
                 appendMessage('ai', data.response || 'Done!', tags);
                 
                 (data.actions_taken || []).forEach(a => {
-                    const badgeClass = a.status === 'routed' ? 'routed' : 'ok';
-                    addAgentEntry(a.agent, a.action, badgeClass, a.status.toUpperCase());
+                    const statusVal = a.status || '200 OK';
+                    const badgeClass = statusVal.toLowerCase().includes('routed') ? 'routed' : 'ok';
+                    addAgentEntry(a.agent, a.action, badgeClass, statusVal.toUpperCase());
                 });
 
                 const elapsed = Date.now() - startTime;
