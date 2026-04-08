@@ -1,0 +1,89 @@
+# agents/orchestrator.py
+import google.generativeai as genai
+from agents.task_agent import run_task_agent
+from agents.calendar_agent import run_calendar_agent
+from agents.comms_agent import run_comms_agent
+from db.database import AsyncSessionLocal
+from db.models import UserSession
+from sqlalchemy import select
+import os, json
+
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+
+async def get_or_create_session(session_id: str, user_id: str):
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(UserSession).where(UserSession.session_id == session_id))
+        session = result.scalar_one_or_none()
+        if not session:
+            session = UserSession(session_id=session_id, user_id=user_id, history=[])
+            db.add(session)
+            await db.commit()
+        return session.history
+
+
+async def save_session(session_id: str, history: list):
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(UserSession).where(UserSession.session_id == session_id))
+        session = result.scalar_one_or_none()
+        if session:
+            session.history = history
+            await db.commit()
+
+
+async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
+    history = await get_or_create_session(session_id, user_id)
+
+    # Step 1: Decide which agents are needed
+    model = genai.GenerativeModel("gemini-2.5-flash")
+    routing_prompt = f"""
+    You are OrchestAI, a productivity orchestrator.
+    User message: "{message}"
+
+    Which agents are needed? Respond ONLY with a JSON like:
+    {{"agents": ["task", "calendar", "comms"], "reasoning": "brief reason"}}
+
+    Available agents: "task" (for to-dos and task management), "calendar" (for scheduling events), "comms" (for emails)
+    Only include agents that are actually needed.
+    """
+    routing_response = model.generate_content(routing_prompt)
+    raw = routing_response.text.strip().replace("```json", "").replace("```", "").strip()
+    routing = json.loads(raw)
+
+    agents_needed = routing.get("agents", [])
+    results = []
+    actions_taken = []
+
+    # Step 2: Run each needed agent
+    if "task" in agents_needed:
+        result = await run_task_agent(user_id, message)
+        results.append(result)
+        actions_taken.append({"agent": "TaskAgent", "action": "task_operation", "status": "success"})
+
+    if "calendar" in agents_needed:
+        result = await run_calendar_agent(message)
+        results.append(result)
+        actions_taken.append({"agent": "CalendarAgent", "action": "calendar_operation", "status": "success"})
+
+    if "comms" in agents_needed:
+        result = await run_comms_agent(message)
+        results.append(result)
+        actions_taken.append({"agent": "CommsAgent", "action": "email_operation", "status": "success"})
+
+    # Step 3: Synthesize final response
+    synthesis_prompt = f"""
+    The user asked: "{message}"
+    The following actions were completed: {json.dumps(results)}
+    Write a short, friendly summary of what was done for the user.
+    """
+    final_response = model.generate_content(synthesis_prompt)
+
+    # Save to session history
+    history.append({"role": "user", "content": message})
+    history.append({"role": "assistant", "content": final_response.text})
+    await save_session(session_id, history)
+
+    return {
+        "response": final_response.text,
+        "actions_taken": actions_taken
+    }
