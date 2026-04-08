@@ -72,3 +72,41 @@ async def get_tasks(user_id: str):
             }
             for t in tasks
         ]
+
+@app.get("/sessions")
+async def get_sessions(user_id: str):
+    from db.models import UserSession
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(UserSession).where(UserSession.user_id == user_id).order_by(UserSession.created_at.desc()))
+        sessions = result.scalars().all()
+        return [{"session_id": s.session_id, "created_at": str(s.created_at)} for s in sessions]
+
+@app.get("/sessions/{session_id}")
+async def get_session_history(session_id: str):
+    from db.models import UserSession
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(UserSession).where(UserSession.session_id == session_id))
+        session = result.scalar_one_or_none()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        return {"history": session.history, "created_at": str(session.created_at)}
+
+@app.get("/logs")
+async def get_logs(session_id: str = None):
+    from db.models import ExecutionLog
+    async with AsyncSessionLocal() as db:
+        query = select(ExecutionLog).order_by(ExecutionLog.timestamp.desc())
+        if session_id:
+            query = query.where(ExecutionLog.session_id == session_id)
+        result = await db.execute(query)
+        logs = result.scalars().all()
+        return [{"id": str(log.id), "session_id": log.session_id, "agent": log.agent, "action": log.action, "status": log.status, "timestamp": str(log.timestamp)} for log in logs]
+
+@app.get("/calendar/events")
+def get_calendar_events(date: str):
+    try:
+        from tools.calendar_mcp import list_calendar_events
+        events = list_calendar_events(date)
+        return events
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

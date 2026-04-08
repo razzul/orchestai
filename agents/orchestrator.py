@@ -4,7 +4,7 @@ from agents.task_agent import run_task_agent
 from agents.calendar_agent import run_calendar_agent
 from agents.comms_agent import run_comms_agent
 from db.database import AsyncSessionLocal
-from db.models import UserSession
+from db.models import UserSession, ExecutionLog
 from sqlalchemy import select
 import os, json
 
@@ -29,6 +29,18 @@ async def save_session(session_id: str, history: list):
         if session:
             session.history = history
             await db.commit()
+
+async def save_execution_logs(session_id: str, actions: list):
+    async with AsyncSessionLocal() as db:
+        for action in actions:
+            log = ExecutionLog(
+                session_id=session_id,
+                agent=action["agent"],
+                action=action["action"],
+                status=action["status"]
+            )
+            db.add(log)
+        await db.commit()
 
 
 async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
@@ -82,6 +94,7 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     history.append({"role": "user", "content": message})
     history.append({"role": "assistant", "content": final_response.text})
     await save_session(session_id, history)
+    await save_execution_logs(session_id, actions_taken)
 
     return {
         "response": final_response.text,
