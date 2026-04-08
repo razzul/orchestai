@@ -7,7 +7,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 async def run_calendar_agent(instruction: str) -> str:
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-3-flash-preview")
     prompt = f"""
     You are a calendar manager. The user said: "{instruction}"
 

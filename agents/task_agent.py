@@ -46,7 +46,7 @@ async def update_task_status(task_id: str, status: str) -> dict:
 
 async def run_task_agent(user_id: str, instruction: str) -> str:
     """Uses Gemini to decide which task operation to perform."""
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-3-flash-preview")
     prompt = f"""
     You are a task manager. The user said: "{instruction}"
     User ID: {user_id}

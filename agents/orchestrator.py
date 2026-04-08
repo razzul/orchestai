@@ -57,7 +57,7 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     new_title = title
 
     # Step 1: Decide which agents are needed
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-3-flash-preview")
     routing_prompt = f"""
     You are OrchestAI, a productivity orchestrator.
     User message: "{message}"
