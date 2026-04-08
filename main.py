@@ -118,6 +118,23 @@ async def update_session_title_endpoint(session_id: str, req: TitleUpdateRequest
         await db.commit()
         return {"status": "ok", "title": session.title}
 
+@app.delete("/sessions/{session_id}")
+async def delete_session_endpoint(session_id: str):
+    from db.models import UserSession, ExecutionLog
+    from sqlalchemy import delete
+    async with AsyncSessionLocal() as db:
+        # Delete related logs
+        await db.execute(delete(ExecutionLog).where(ExecutionLog.session_id == session_id))
+        # Delete session
+        result = await db.execute(select(UserSession).where(UserSession.session_id == session_id))
+        session = result.scalar_one_or_none()
+        if not session:
+             raise HTTPException(status_code=404, detail="Session not found")
+        await db.delete(session)
+        await db.commit()
+        return {"status": "ok", "message": "Session deleted"}
+
+
 @app.get("/logs")
 async def get_logs(session_id: str = None):
     from db.models import ExecutionLog

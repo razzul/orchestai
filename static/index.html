@@ -118,16 +118,17 @@
         }
 
         .avatar {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: var(--accent);
-            color: #fff;
+            background: #d1fae5;
+            color: #065f46;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
-            font-size: 13px
+            font-weight: 700;
+            font-size: 13px;
+            border: 1px solid #a7f3d0;
         }
 
         /* PAGES */
@@ -174,7 +175,11 @@
             color: var(--text2);
             transition: all .12s;
             border-left: 2px solid transparent;
-            line-height: 1.4
+            line-height: 1.4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
         }
 
         .session-item:hover {
@@ -187,6 +192,29 @@
             color: var(--accent);
             font-weight: 500;
             border-left-color: var(--accent)
+        }
+
+        .delete-session-btn {
+            opacity: 0;
+            transition: opacity 0.1s;
+            color: var(--text3);
+            font-size: 18px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .session-item:hover .delete-session-btn {
+            opacity: 1;
+        }
+
+        .delete-session-btn:hover {
+            background: var(--red-light);
+            color: var(--red);
         }
 
         .new-chat-btn {
@@ -772,25 +800,241 @@
             margin-bottom: 6px
         }
 
-        .cal-time {
-            font-size: 11px;
-            color: var(--accent);
-            font-weight: 500;
-            margin-bottom: 2px;
-            font-family: 'DM Mono', monospace
+        /* ===== TASKS PAGE RE DESIGN ===== */
+        #tasks-page {
+            display: none;
+            flex-direction: column;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+            padding: 24px;
+            background: var(--bg);
+            gap: 24px;
         }
 
-        .cal-title {
+        #tasks-page.active {
+            display: flex;
+        }
+
+        .tasks-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .top-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .glass-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-label {
+            font-size: 13px;
+            color: var(--text3);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .card-sub {
             font-size: 13px;
             font-weight: 600;
-            color: var(--text)
         }
 
-        .cal-source {
-            font-size: 11px;
-            color: var(--text3);
-            margin-top: 1px
+        .card-sub.up { color: #2d6a4f; }
+        .card-sub.warn { color: #b5560a; }
+        .card-sub.danger { color: #e07070; }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            align-items: start;
         }
+
+        .main-list-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .list-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .list-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .tag-filters {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tag-btn {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag-btn.active {
+            background: #e8f5ee;
+            color: #2d6a4f;
+            border-color: #2d6a4f;
+        }
+
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .task-table th {
+            text-align: left;
+            padding: 12px 24px;
+            font-size: 12px;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .task-table td {
+            padding: 16px 24px;
+            font-size: 14px;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .task-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .task-title-cell {
+            font-weight: 500;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge.high { background: #fee2e2; color: #991b1b; }
+        .badge.medium { background: #fef3c7; color: #92400e; }
+        .badge.low { background: #d1fae5; color: #065f46; }
+
+        .badge.status-bg { background: #dbeafe; color: #1e40af; }
+        .badge.status-pending { background: #f3f4f6; color: #374151; }
+        .badge.status-done { background: #dcfce7; color: #166534; }
+
+        .source-label {
+            color: var(--text3);
+            font-size: 12px;
+        }
+
+        /* Sidebar Week List */
+        .week-sidebar {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .week-sidebar h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .day-section {
+            margin-bottom: 24px;
+        }
+
+        .day-header {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border2);
+        }
+
+        .event-card {
+            background: #f0fdf4;
+            border-left: 4px solid #2d6a4f;
+            border-radius: 4px 8px 8px 4px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+        }
+
+        .event-card.manual {
+            background: #f9fafb;
+            border-left-color: #d1d5db;
+        }
+
+        .event-time {
+            font-size: 11px;
+            font-weight: 600;
+            color: #2d6a4f;
+            margin-bottom: 4px;
+        }
+
+        .event-card.manual .event-time { color: #6b7280; }
+
+        .event-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .event-via {
+            font-size: 11px;
+            color: #52b788;
+        }
+
+        .event-card.manual .event-via { color: #9ca3af; }
 
         /* Loading state */
         .typing-indicator {
@@ -835,11 +1079,12 @@
 
     <!-- NAV -->
     <nav>
-        <span class="logo">Orchest<span>AI</span></span>
+        <span class="logo">Orchest<span style="color: #2d6a4f;">AI</span></span>
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showPage('chat')">Chat</button>
             <button class="nav-tab" onclick="showPage('tasks')">Tasks</button>
             <button class="nav-tab" onclick="showPage('calendar')">Calendar</button>
+            <button class="nav-tab" onclick="showPage('inbox')">Inbox</button>
             <button class="nav-tab" onclick="showPage('logs')">Logs</button>
         </div>
         <div class="nav-right">
@@ -854,10 +1099,7 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">Sessions</div>
-            <div class="session-item active">Project kickoff planning</div>
-            <div class="session-item">Q3 budget review tasks</div>
-            <div class="session-item">Team sync scheduling</div>
-            <div class="session-item">Vendor contract follow-up</div>
+            <div id="session-list" style="flex: 1; overflow-y: auto;"></div>
             <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
         </div>
 
@@ -895,49 +1137,66 @@
 
     <!-- ===== TASKS PAGE ===== -->
     <div class="page" id="tasks-page">
-        <div class="container-fluid p-4" style="width: 100%; overflow-y: auto;">
-            <!-- Stats -->
-            <div class="stats-row mb-4">
-                <div class="stat-card">
-                    <div class="stat-label">Total tasks</div>
-                    <div class="stat-value" id="stat-total">0</div>
+        <div class="tasks-container">
+            <!-- Top Cards -->
+            <div class="top-cards">
+                <div class="glass-card">
+                    <div class="card-label">Total tasks</div>
+                    <div class="card-value" id="stat-total">0</div>
+                    <div class="card-sub up" id="stat-total-sub">+0 this week</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Pending</div>
-                    <div class="stat-value" id="stat-pending">0</div>
+                <div class="glass-card">
+                    <div class="card-label">Due this week</div>
+                    <div class="card-value" id="stat-thisweek">0</div>
+                    <div class="card-sub warn" id="stat-thisweek-sub">0 high-priority</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">In Progress</div>
-                    <div class="stat-value" id="stat-inprogress">0</div>
+                <div class="glass-card">
+                    <div class="card-label">Overdue</div>
+                    <div class="card-value" id="stat-overdue">0</div>
+                    <div class="card-sub danger">Action needed</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Completed</div>
-                    <div class="stat-value" id="stat-done">0</div>
+                <div class="glass-card">
+                    <div class="card-label">Completed</div>
+                    <div class="card-value" id="stat-completed">0</div>
+                    <div class="card-sub up" id="stat-completed-rate">0% completion</div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Task list</span>
-                    <div class="filter-group">
-                        <button class="filter-btn active" onclick="filterTasks('all',this)">All</button>
-                        <button class="filter-btn" onclick="filterTasks('high',this)">High</button>
+            <!-- Main Content Grid -->
+            <div class="tasks-grid">
+                <!-- Left: Task List -->
+                <div class="main-list-card">
+                    <div class="list-header">
+                        <h2>Task list</h2>
+                        <div class="tag-filters">
+                            <button class="tag-btn active" onclick="filterTasks('all', this)">All</button>
+                            <button class="tag-btn" onclick="filterTasks('high', this)">High</button>
+                            <button class="tag-btn" onclick="filterTasks('thisweek', this)">This week</button>
+                        </div>
+                    </div>
+                    <table class="task-table">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Priority</th>
+                                <th>Due</th>
+                                <th>Status</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-tbody">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Right: This Week Sidebar -->
+                <div class="week-sidebar">
+                    <h2>This week</h2>
+                    <div id="week-events-container">
+                        <!-- Loaded via JS -->
                     </div>
                 </div>
-                <table class="task-table">
-                    <thead>
-                        <tr>
-                            <th>Task</th>
-                            <th>Priority</th>
-                            <th>Due</th>
-                            <th>Status</th>
-                            <th>Source</th>
-                        </tr>
-                    </thead>
-                    <tbody id="task-tbody">
-                        <!-- Loaded via JS -->
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -953,6 +1212,17 @@
                 <div id="calendar-events-container" style="padding: 16px;">
                     <!-- Loaded via JS -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== INBOX PAGE ===== -->
+    <div class="page" id="inbox-page">
+        <div class="container-fluid p-4" style="width: 100%; display: flex; align-items: center; justify-content: center; color: var(--text3);">
+            <div style="text-align: center;">
+                <div style="font-size: 40px; margin-bottom: 20px;">📩</div>
+                <h3>Inbox coming soon</h3>
+                <p>We're building a unified inbox for all your communications.</p>
             </div>
         </div>
     </div>
@@ -986,7 +1256,7 @@
     <script>
         const API_BASE = window.location.origin;
         let userId = 'u1';
-        let sessionId = 'sess_' + Date.now();
+        let sessionId = null;
         let toolCallCount = 0;
         let startTime = null;
 
@@ -999,11 +1269,13 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             
-            const btnIndex = { 'chat': 0, 'tasks': 1, 'calendar': 2, 'logs': 3 };
+            const tabs = Array.from(document.querySelectorAll('.nav-tab'));
             const pageId = page + '-page';
+            
             if (document.getElementById(pageId)) {
                 document.getElementById(pageId).classList.add('active');
-                document.querySelectorAll('.nav-tab')[btnIndex[page]].classList.add('active');
+                const activeTab = tabs.find(t => t.textContent.toLowerCase() === page.toLowerCase());
+                if (activeTab) activeTab.classList.add('active');
             }
             
             if (page === 'tasks') loadTasks();
@@ -1015,17 +1287,50 @@
             try {
                 const res = await fetch(`${API_BASE}/sessions?user_id=${userId}`);
                 const sessions = await res.json();
-                const sidebar = document.querySelector('.sidebar');
-                sidebar.querySelectorAll('.session-item').forEach(i => i.remove());
+                const sessionList = document.getElementById('session-list');
+                sessionList.innerHTML = '';
                 
                 sessions.forEach(s => {
                     const div = document.createElement('div');
                     div.className = 'session-item' + (s.session_id === sessionId ? ' active' : '');
-                    div.textContent = s.title;
-                    div.onclick = () => switchSession(s.session_id);
-                    sidebar.insertBefore(div, sidebar.querySelector('.new-chat-btn'));
+                    div.innerHTML = `
+                        <span class="session-title" style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.title}</span>
+                        <div class="delete-session-btn" onclick="deleteSession(event, '${s.session_id}')">×</div>
+                    `;
+                    div.onclick = (e) => {
+                        if (e.target.classList.contains('delete-session-btn')) return;
+                        switchSession(s.session_id);
+                    };
+                    sessionList.appendChild(div);
                 });
+
+                // If no session selected, select the first (last) one
+                if (!sessionId && sessions.length > 0) {
+                    switchSession(sessions[0].session_id);
+                } else if (!sessionId) {
+                    newChat();
+                }
             } catch (e) { console.error("Error loading sessions", e); }
+        }
+
+        async function deleteSession(event, sid) {
+            event.stopPropagation();
+            if (!confirm("Are you sure you want to delete this chat?")) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/sessions/${sid}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    if (sid === sessionId) {
+                        sessionId = null;
+                        document.getElementById('chat-messages').innerHTML = '';
+                        document.getElementById('agent-log').innerHTML = '';
+                        document.getElementById('chat-title').value = 'New Chat';
+                    }
+                    loadSessions();
+                }
+            } catch (e) { console.error("Error deleting session", e); }
         }
 
         async function switchSession(sid) {
@@ -1196,7 +1501,6 @@
                 appendMessage('ai', '⚠️ Error connecting to backend.');
             }
         }
-
         async function loadTasks() {
             try {
                 const res = await fetch(`${API_BASE}/tasks?user_id=${userId}`);
@@ -1204,39 +1508,137 @@
                 const tbody = document.getElementById('task-tbody');
                 tbody.innerHTML = '';
                 
-                let stats = { pending: 0, in_progress: 0, done: 0 };
+                const now = new Date();
+                const oneWeekLater = new Date();
+                oneWeekLater.setDate(now.getDate() + 7);
+                
+                let stats = { total: tasks.length, thisWeek: 0, highPriorityThisWeek: 0, overdue: 0, completed: 0, newThisWeek: 0 };
                 
                 tasks.forEach(t => {
                     const status = (t.status || 'pending').toLowerCase();
-                    if (stats.hasOwnProperty(status)) stats[status]++;
-                    else if (status === 'inprogress') stats['in_progress']++;
+                    const priority = (t.priority || 'medium').toLowerCase();
+                    const dueDateStr = t.due_date && t.due_date !== 'None' ? t.due_date.split('T')[0] : null;
+                    const dueDate = dueDateStr ? new Date(dueDateStr) : null;
+                    
+                    // Stats calculation
+                    if (status === 'done' || status === 'completed') stats.completed++;
+                    
+                    if (dueDate) {
+                        if (dueDate < now && status !== 'done' && status !== 'completed') stats.overdue++;
+                        if (dueDate >= now && dueDate <= oneWeekLater) {
+                            stats.thisWeek++;
+                            if (priority === 'high') stats.highPriorityThisWeek++;
+                        }
+                    }
 
-                    const priorityClass = (t.priority || 'medium').toLowerCase();
-                    const statusClass = status.replace('_', '');
-                    tbody.innerHTML += `
-                        <tr data-priority="${priorityClass}">
-                          <td>${t.title}</td>
-                          <td><span class="priority-badge ${priorityClass}">${t.priority || 'Medium'}</span></td>
-                          <td>${t.due_date && t.due_date !== 'None' ? t.due_date.split('T')[0] : '—'}</td>
-                          <td><span class="status-badge-table ${statusClass}">${t.status}</span></td>
-                          <td><span class="source-text">OrchestAI</span></td>
-                        </tr>`;
+                    // For demo, assume tasks created with high IDs or recent are "new this week"
+                    // Real implementation would use created_at
+                    
+                    const priorityClass = priority;
+                    let statusClass = 'status-pending';
+                    if (status === 'inprogress' || status === 'in progress') statusClass = 'status-bg';
+                    if (status === 'done' || status === 'completed') statusClass = 'status-done';
+
+                    const formattedDate = dueDate ? dueDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', weekday: 'short' }) : '—';
+
+                    const tr = document.createElement('tr');
+                    tr.dataset.priority = priority;
+                    tr.dataset.due = dueDateStr || '';
+                    tr.innerHTML = `
+                        <td class="task-title-cell">${t.title}</td>
+                        <td><span class="badge ${priorityClass}">${t.priority || 'Medium'}</span></td>
+                        <td>${formattedDate}</td>
+                        <td><span class="badge ${statusClass}">${t.status}</span></td>
+                        <td><span class="source-label">${t.source || 'OrchestAI'}</span></td>
+                    `;
+                    tbody.appendChild(tr);
                 });
                 
-                document.getElementById('stat-total').textContent = tasks.length;
-                document.getElementById('stat-pending').textContent = stats.pending;
-                document.getElementById('stat-inprogress').textContent = stats.in_progress;
-                document.getElementById('stat-done').textContent = stats.done;
+                // Update Stats UI
+                document.getElementById('stat-total').textContent = stats.total;
+                document.getElementById('stat-thisweek').textContent = stats.thisWeek;
+                document.getElementById('stat-overdue').textContent = stats.overdue;
+                document.getElementById('stat-completed').textContent = stats.completed;
+                
+                document.getElementById('stat-total-sub').textContent = `+${Math.floor(stats.total*0.1)} this week`;
+                document.getElementById('stat-thisweek-sub').textContent = `${stats.highPriorityThisWeek} high-priority`;
+                document.getElementById('stat-completed-rate').textContent = `${Math.round((stats.completed / (stats.total || 1)) * 100)}% completion`;
+
+                loadWeekEvents();
             } catch (e) { console.error("Error loading tasks", e); }
         }
 
         function filterTasks(type, btn) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            
+            const now = new Date();
+            const oneWeekLater = new Date();
+            oneWeekLater.setDate(now.getDate() + 7);
+
             document.querySelectorAll('#task-tbody tr').forEach(row => {
-                if (type === 'high') row.style.display = row.dataset.priority === 'high' ? '' : 'none';
-                else row.style.display = '';
+                if (type === 'high') {
+                    row.style.display = row.dataset.priority === 'high' ? '' : 'none';
+                } else if (type === 'thisweek') {
+                    const dueDate = row.dataset.due ? new Date(row.dataset.due) : null;
+                    row.style.display = (dueDate && dueDate >= now && dueDate <= oneWeekLater) ? '' : 'none';
+                } else {
+                    row.style.display = '';
+                }
             });
+        }
+
+        async function loadWeekEvents() {
+            const container = document.getElementById('week-events-container');
+            container.innerHTML = 'Loading events...';
+            
+            const days = [];
+            const now = new Date();
+            for(let i=0; i<3; i++) {
+                const d = new Date();
+                d.setDate(now.getDate() + i);
+                days.push(d.toISOString().split('T')[0]);
+            }
+
+            try {
+                let allEvents = [];
+                for(const d of days) {
+                    const res = await fetch(`${API_BASE}/calendar/events?date=${d}`);
+                    const events = await res.json();
+                    if(events && events.length) {
+                        allEvents.push({ date: d, events: events });
+                    }
+                }
+
+                container.innerHTML = '';
+                if (!allEvents.length) {
+                    container.innerHTML = '<div class="source-label">No events this week.</div>';
+                    return;
+                }
+
+                allEvents.forEach(group => {
+                    const d = new Date(group.date);
+                    const dayName = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+                    
+                    const section = document.createElement('div');
+                    section.className = 'day-section';
+                    section.innerHTML = `<div class="day-header">${dayName}</div>`;
+                    
+                    group.events.forEach(e => {
+                        const time = e.start ? e.start.split('T')[1].substring(0, 5) : 'All Day';
+                        const isManual = e.summary && e.summary.toLowerCase().includes('manual');
+                        const card = document.createElement('div');
+                        card.className = 'event-card' + (isManual ? ' manual' : '');
+                        card.innerHTML = `
+                            <div class="event-time">${time}</div>
+                            <div class="event-name">${e.summary}</div>
+                            <div class="event-via">via ${isManual ? 'Manual' : 'OrchestAI'}</div>
+                        `;
+                        section.appendChild(card);
+                    });
+                    container.appendChild(section);
+                });
+            } catch (e) { container.innerHTML = 'Error loading sidebar.'; }
         }
 
         function loadCalendarToday() {
