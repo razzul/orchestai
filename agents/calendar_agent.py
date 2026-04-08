@@ -7,7 +7,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 async def run_calendar_agent(instruction: str) -> str:
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     prompt = f"""
     You are a calendar manager. The user said: "{instruction}"
 
@@ -18,9 +18,13 @@ async def run_calendar_agent(instruction: str) -> str:
     OR
     {{"action": "delete_event", "event_id": "..."}}
     """
-    response = model.generate_content(prompt)
-    raw = response.text.strip().replace("```json", "").replace("```", "").strip()
-    data = json.loads(raw)
+    try:
+        response = model.generate_content(prompt)
+        raw = response.text.strip().replace("```json", "").replace("```", "").strip()
+        data = json.loads(raw)
+    except Exception as e:
+        print(f"Calendar agent error: {e}")
+        return {"response": "I'm having trouble with your calendar request right now.", "log_entry": "CAL_ERROR"}
 
     if data["action"] == "create_event":
         result = create_calendar_event(
@@ -30,7 +34,8 @@ async def run_calendar_agent(instruction: str) -> str:
             data.get("description", "")
         )
         # Extract time for log
-        time_str = data["start_time"].split("T")[1][:5] if "T" in data["start_time"] else data["start_time"]
+        start_time = data.get("start_time") or ""
+        time_str = start_time.split("T")[1][:5] if "T" in start_time else ("All day" if start_time else "Unknown")
         return {
             "response": f"Event created: {result}",
             "log_entry": f"MCP gcal.create_event {data['summary']} at {time_str}"

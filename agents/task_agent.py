@@ -46,7 +46,7 @@ async def update_task_status(task_id: str, status: str) -> dict:
 
 async def run_task_agent(user_id: str, instruction: str) -> str:
     """Uses Gemini to decide which task operation to perform."""
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     prompt = f"""
     You are a task manager. The user said: "{instruction}"
     User ID: {user_id}
@@ -58,9 +58,13 @@ async def run_task_agent(user_id: str, instruction: str) -> str:
     OR
     {{"action": "update_task_status", "task_id": "...", "status": "completed"}}
     """
-    response = model.generate_content(prompt)
-    raw = response.text.strip().replace("```json", "").replace("```", "").strip()
-    data = json.loads(raw)
+    try:
+        response = model.generate_content(prompt)
+        raw = response.text.strip().replace("```json", "").replace("```", "").strip()
+        data = json.loads(raw)
+    except Exception as e:
+        print(f"Task agent error: {e}")
+        return {"response": "I'm having trouble processing your task request right now.", "log_entry": "TASK_ERROR"}
 
     if data["action"] == "create_task":
         result = await create_task(user_id, data["title"], data.get("due_date"), data.get("priority", "medium"))

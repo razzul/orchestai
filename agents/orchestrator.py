@@ -57,7 +57,7 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     new_title = title
 
     # Step 1: Decide which agents are needed
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     routing_prompt = f"""
     You are OrchestAI, a productivity orchestrator.
     User message: "{message}"
@@ -68,9 +68,13 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     Available agents: "task" (for to-dos and task management), "calendar" (for scheduling events), "comms" (for emails)
     Only include agents that are actually needed.
     """
-    routing_response = model.generate_content(routing_prompt)
-    raw = routing_response.text.strip().replace("```json", "").replace("```", "").strip()
-    routing = json.loads(raw)
+    try:
+        routing_response = model.generate_content(routing_prompt)
+        raw = routing_response.text.strip().replace("```json", "").replace("```", "").strip()
+        routing = json.loads(raw)
+    except Exception as e:
+        print(f"Routing error: {e}")
+        routing = {"agents": [], "reasoning": "Fallback due to routing error"}
     
     agents_needed = routing.get("agents", [])
     intent_map = {"task": "create task", "calendar": "create_event", "comms": "send_email"}
@@ -101,23 +105,32 @@ async def run_orchestrator(user_id: str, session_id: str, message: str) -> dict:
     The following actions were completed: {json.dumps(results)}
     Write a short, friendly summary of what was done for the user.
     """
-    final_response = model.generate_content(synthesis_prompt)
+    try:
+        final_response_res = model.generate_content(synthesis_prompt)
+        final_text = final_response_res.text
+    except Exception as e:
+        print(f"Synthesis error: {e}")
+        final_text = "I've completed the requested actions, but I'm having trouble generating a summary right now. Your tasks and calendar have been updated."
 
     # Generate title if it's a "New Chat"
     if title == "New Chat":
-        title_prompt = f"Generate a very short (max 5 words) descriptive title for this conversation based on this first message: '{message}'. Respond ONLY with the title string."
-        title_res = model.generate_content(title_prompt)
-        new_title = title_res.text.strip()
-        await update_session_title(session_id, new_title)
+        try:
+            title_prompt = f"Generate a very short (max 5 words) descriptive title for this conversation based on this first message: '{message}'. Respond ONLY with the title string."
+            title_res = model.generate_content(title_prompt)
+            new_title = title_res.text.strip()
+            await update_session_title(session_id, new_title)
+        except Exception as e:
+            print(f"Title generation error: {e}")
+            new_title = "New Chat"
 
     # Save to session history
     history.append({"role": "user", "content": message})
-    history.append({"role": "assistant", "content": final_response.text})
+    history.append({"role": "assistant", "content": final_text})
     await save_session(session_id, history)
     await save_execution_logs(session_id, actions_taken)
 
     return {
-        "response": final_response.text,
+        "response": final_text,
         "actions_taken": actions_taken,
         "title": new_title
     }

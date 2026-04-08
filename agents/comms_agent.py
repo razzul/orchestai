@@ -7,7 +7,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 async def run_comms_agent(instruction: str) -> str:
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     prompt = f"""
     You are an email manager. The user said: "{instruction}"
 
@@ -18,9 +18,13 @@ async def run_comms_agent(instruction: str) -> str:
     OR
     {{"action": "draft_email", "to": "someone@email.com", "subject": "...", "body": "..."}}
     """
-    response = model.generate_content(prompt)
-    raw = response.text.strip().replace("```json", "").replace("```", "").strip()
-    data = json.loads(raw)
+    try:
+        response = model.generate_content(prompt)
+        raw = response.text.strip().replace("```json", "").replace("```", "").strip()
+        data = json.loads(raw)
+    except Exception as e:
+        print(f"Comms agent error: {e}")
+        return {"response": "I'm having trouble with your email request right now.", "log_entry": "COMMS_ERROR"}
 
     if data["action"] == "send_email":
         result = send_email(data["to"], data["subject"], data["body"])
